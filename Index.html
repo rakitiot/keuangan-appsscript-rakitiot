@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keuangan</title>
+<style>
+:root{--text:#111827;--muted:#4b5563;--border:#d1d5db;--accent:#1d4ed8;--danger:#b91c1c;--soft:#f3f4f6}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:#fff;color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+h1{font-size:22px;margin:0}
+h2{font-size:18px;margin:24px 0 8px}
+.muted{color:var(--muted);font-size:14px}
+nav{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);margin-bottom:16px}
+nav button{background:none;border:0;border-bottom:3px solid transparent;padding:12px 4px;min-height:44px;font:inherit;color:var(--muted);cursor:pointer}
+nav button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{border:1px solid var(--border);border-radius:8px;padding:12px}
+.card.total{grid-column:1/-1}
+.card .v{font-size:22px;font-weight:600;margin-top:4px;word-break:break-word}
+.card.total .v{font-size:28px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(4,1fr)}.card.total{grid-column:auto}}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{font-size:14px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--text)}
+.num{text-align:right;white-space:nowrap}
+.tg{white-space:nowrap;color:var(--muted);font-size:14px}
+.sub{color:var(--muted);font-size:13px}
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+.tablewrap table tr:last-child td{border-bottom:0}
+label.f{display:block;margin-bottom:12px}
+label.f>span{display:block;font-size:14px;font-weight:600;margin-bottom:4px}
+input,select,textarea{width:100%;min-height:44px;padding:8px 10px;font:inherit;color:var(--text);background:#fff;border:1px solid #6b7280;border-radius:6px}
+textarea{min-height:96px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid #93c5fd;outline-offset:1px}
+.btn{min-height:44px;padding:8px 16px;font:inherit;font-weight:600;color:#fff;background:var(--accent);border:0;border-radius:6px;cursor:pointer}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.sec{color:var(--text);background:#fff;border:1px solid #6b7280}
+.lnk{background:none;border:0;padding:8px 0;min-height:44px;font:inherit;color:var(--danger);cursor:pointer;text-decoration:underline}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);margin-bottom:16px;border:1px solid #6b7280;border-radius:6px;overflow:hidden}
+.seg button{background:#fff;border:0;border-right:1px solid #6b7280;min-height:44px;font:inherit;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:#fff;font-weight:600}
+.filters{display:grid;grid-template-columns:1fr;gap:0 12px}
+@media(min-width:640px){.filters{grid-template-columns:1fr 1fr 1fr}}
+.bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar.over i{background:var(--danger)}
+.empty{border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center}
+.empty p{margin:0 0 12px}
+ul.kol{list-style:none;padding:0;margin:0 0 16px;border:1px solid var(--border);border-radius:8px}
+ul.kol li{display:flex;justify-content:space-between;align-items:center;padding:0 12px;border-bottom:1px solid var(--border)}
+ul.kol li:last-child{border-bottom:0}
+#pesan{position:fixed;left:12px;right:12px;bottom:12px;max-width:696px;margin:0 auto;padding:12px 16px;background:#fff;color:var(--text);border:1px solid var(--text);border-radius:6px;display:none}
+#pesan.show{display:block}
+#pesan.err{color:var(--danger);border-color:var(--danger)}
+.err{color:var(--danger)}
+footer{margin:32px 0 64px;padding-top:12px;border-top:1px solid var(--border);text-align:center;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div><h1>Keuangan</h1><div id="user"></div></div><span class="muted" id="bulan"></span></header>
+
+  <section id="pin" hidden>
+    <h2>Masukkan PIN</h2>
+    <label class="f"><span>PIN</span><input type="password" id="pin-in" inputmode="numeric" autocomplete="off"></label>
+    <button class="btn" onclick="bukaPin()">Buka aplikasi</button>
+  </section>
+
+  <div id="app" hidden>
+    <nav id="tabs" role="tablist">
+      <button role="tab" data-t="ringkasan" aria-selected="true">Ringkasan</button>
+      <button role="tab" data-t="catat" aria-selected="false">Catat</button>
+      <button role="tab" data-t="riwayat" aria-selected="false">Riwayat</button>
+      <button role="tab" data-t="setting" aria-selected="false">Setting</button>
+    </nav>
+
+    <section id="t-ringkasan"></section>
+
+    <section id="t-catat" hidden>
+      <div class="seg" id="seg">
+        <button data-s="PENGELUARAN" aria-pressed="true">Pengeluaran</button>
+        <button data-s="PEMASUKAN" aria-pressed="false">Pemasukan</button>
+        <button data-s="TRANSFER" aria-pressed="false">Transfer</button>
+      </div>
+      <div id="form-catat"></div>
+    </section>
+
+    <section id="t-riwayat" hidden>
+      <div class="filters">
+        <label class="f"><span>Bulan (kosongkan untuk semua)</span><input type="month" id="r-bulan" oninput="renderRiwayat()"></label>
+        <label class="f"><span>Jenis</span>
+          <select id="r-jenis" onchange="renderRiwayat()">
+            <option value="">Semua</option><option value="HARIAN">Harian</option><option value="POKOK">Kebutuhan pokok</option>
+            <option value="PASIF">Kebutuhan pasif</option><option value="PEMASUKAN">Pemasukan</option><option value="TRANSFER">Transfer</option>
+          </select></label>
+        <label class="f"><span>Cari keterangan</span><input type="search" id="r-q" oninput="renderRiwayat()"></label>
+      </div>
+      <div id="riwayat"></div>
+    </section>
+
+    <section id="t-setting" hidden></section>
+  </div>
+  <footer>Catatan Keuangan Pribadi, by @rakitiot</footer>
+</div>
+<div id="pesan" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const h=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rp=n=>'Rp '+Number(n||0).toLocaleString('id-ID');
+const num=s=>Number(String(s).replace(/[^\d]/g,''));
+const KAT={HARIAN:'Harian',POKOK:'Kebutuhan pokok',PASIF:'Kebutuhan pasif'};
+let D=null, sub='PENGELUARAN', pertama=true;
+
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);};
+const fmtTgl=t=>t.slice(8)+'/'+t.slice(5,7)+'/'+t.slice(2,4);
+const nm=k=>(D&&D.cfg.nama[k])||k;
+const fld=(l,i)=>`<label class="f"><span>${h(l)}</span>${i}</label>`;
+
+function run(f,...a){return new Promise((ok,no)=>google.script.run.withSuccessHandler(ok).withFailureHandler(no)[f](...a));}
+function msg(t,err){const m=$('#pesan');m.textContent=t;m.className=err?'show err':'show';clearTimeout(msg.t);msg.t=setTimeout(()=>m.className='',4500);}
+async function call(f,...a){
+  try{return await run(f,...a);}
+  catch(e){
+    const t=String((e&&e.message)||e).replace(/^(Error|Exception):\s*/,'');
+    if(t.includes('PIN_DIPERLUKAN')){showPin();} else {msg(t,true);}
+    throw e;
+  }
+}
+
+/* ---------- PIN & muat data ---------- */
+function showPin(){$('#app').hidden=true;$('#pin').hidden=false;$('#pin-in').value='';$('#pin-in').focus();}
+async function bukaPin(){
+  try{await call('cekPin',$('#pin-in').value);$('#pin').hidden=true;await load();}catch(e){}
+}
+async function load(){
+  D=await call('ambilData');
+  $('#app').hidden=false;
+  $('#bulan').textContent=D.bulan;
+  $('#user').innerHTML='Halo, <b>'+h(D.cfg.pengguna)+'</b><div class="muted">'+h(D.email)+'</div>';
+  if(pertama){$('#r-bulan').value=D.bulan;pertama=false;}
+  renderRingkasan();renderCatat();renderRiwayat();renderSetting();
+}
+(async()=>{
+  try{const s=await call('statusAkses');if(s.pin&&!s.ok){showPin();return;}await load();}catch(e){}
+})();
+
+/* ---------- Tab ---------- */
+$$('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+function setTab(t){
+  $$('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
+  ['ringkasan','catat','riwayat','setting'].forEach(x=>$('#t-'+x).hidden=x!==t);
+}
+$$('#seg button').forEach(b=>b.onclick=()=>{
+  sub=b.dataset.s;
+  $$('#seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  renderCatat();
+});
+
+/* ---------- Ringkasan ---------- */
+function baris(r,hapusBtn){
+  const jen=r.jenis==='PENGELUARAN'?(KAT[r.kategori]||'Pengeluaran')
+    :r.jenis==='PEMASUKAN'?'Pemasukan ke '+nm(r.ke):'Transfer '+nm(r.dari)+' ke '+nm(r.ke);
+  const tanda=r.jenis==='PENGELUARAN'?'-':r.jenis==='PEMASUKAN'?'+':'';
+  const ex=Object.keys(r.extra||{}).filter(k=>r.extra[k]!=='').map(k=>' | '+h(k)+': '+h(r.extra[k])).join('');
+  return `<tr><td class="tg">${fmtTgl(r.tgl)}</td><td>${h(r.ket)}<div class="sub">${h(jen)}${ex}</div></td>
+  <td class="num">${tanda}${rp(r.jumlah)}</td>${hapusBtn?`<td><button class="lnk" onclick="hapusBaris('${h(r.id)}')">Hapus</button></td>`:''}</tr>`;
+}
+function renderRingkasan(){
+  const s=D.saldo,b=D.bulanIni,batas=D.cfg.batas;
+  let batasHtml='';
+  if(batas>0){
+    const p=Math.min(100,Math.round(b.total/batas*100)),lebih=b.total>batas;
+    batasHtml=`<div class="bar${lebih?' over':''}"><i style="width:${p}%"></i></div>
+    <div class="muted">${lebih?'Melebihi batas '+rp(batas)+' sebesar '+rp(b.total-batas):'Sisa batas bulanan: '+rp(batas-b.total)+' dari '+rp(batas)}</div>`;
+  }
+  const terakhir=D.riwayat.slice(0,5);
+  $('#t-ringkasan').innerHTML=`
+  <div class="grid">
+    <div class="card total"><div class="muted">Saldo total</div><div class="v">${rp(D.total)}</div></div>
+    <div class="card"><div class="muted">${h(nm('BULANAN'))}</div><div class="v">${rp(s.BULANAN)}</div></div>
+    <div class="card"><div class="muted">${h(nm('INVESTASI'))}</div><div class="v">${rp(s.INVESTASI)}</div></div>
+    <div class="card"><div class="muted">${h(nm('SIMPANAN'))}</div><div class="v">${rp(s.SIMPANAN)}</div></div>
+  </div>
+  <h2>Pengeluaran bulan ini</h2>
+  <div class="tablewrap"><table><tbody>
+    <tr><td>Harian</td><td class="num">${rp(b.HARIAN)}</td></tr>
+    <tr><td>Kebutuhan pokok</td><td class="num">${rp(b.POKOK)}</td></tr>
+    <tr><td>Kebutuhan pasif</td><td class="num">${rp(b.PASIF)}</td></tr>
+    <tr><td><b>Total</b></td><td class="num"><b>${rp(b.total)}</b></td></tr>
+  </tbody></table></div>${batasHtml}
+  <h2>Transaksi terakhir</h2>
+  ${terakhir.length?`<div class="tablewrap"><table><tbody>${terakhir.map(r=>baris(r,false)).join('')}</tbody></table></div>`
+  :`<div class="empty"><p>Belum ada transaksi.</p><button class="btn" onclick="setTab('catat')">Catat transaksi pertama</button></div>`}`;
+}
+
+/* ---------- Catat ---------- */
+function extraInput(c){
+  const a=`data-x="${h(c.nama)}"`;
+  if(c.jenis==='angka')return `<input ${a} inputmode="decimal">`;
+  if(c.jenis==='tanggal')return `<input ${a} type="date">`;
+  if(c.jenis==='pilihan')return `<select ${a}><option value="">-</option>${(c.opsi||[]).map(o=>`<option>${h(o)}</option>`).join('')}</select>`;
+  return `<input ${a}>`;
+}
+function renderCatat(){
+  const kant=k=>Object.keys(D.cfg.nama).map(x=>`<option value="${x}"${x===k?' selected':''}>${h(D.cfg.nama[x])}</option>`).join('');
+  const tgl=fld('Tanggal',`<input type="date" id="f-tgl" value="${today()}">`);
+  let f='';
+  if(sub==='PENGELUARAN'){
+    f=tgl+fld('Kategori',`<select id="f-kat" onchange="saran()">${Object.keys(KAT).map(k=>`<option value="${k}">${KAT[k]}</option>`).join('')}</select>`)
+     +fld('Tipe / keterangan','<input id="f-ket" list="saran" autocomplete="off" placeholder="Contoh: Makan siang"><datalist id="saran"></datalist>')
+     +fld('Jumlah (Rp)','<input id="f-jml" inputmode="numeric" placeholder="25000">')
+     +D.cfg.kolom.map(c=>fld(c.nama,extraInput(c))).join('')
+     +`<p class="muted">Diambil dari saldo ${h(nm('BULANAN'))}: ${rp(D.saldo.BULANAN)}</p>`
+     +'<button class="btn" id="simpan" onclick="simpanPengeluaran()">Simpan pengeluaran</button>';
+  }else if(sub==='PEMASUKAN'){
+    f=tgl+fld('Masuk ke',`<select id="f-ke">${kant('BULANAN')}</select>`)
+     +fld('Jumlah (Rp)','<input id="f-jml" inputmode="numeric" placeholder="3000000">')
+     +fld('Keterangan','<input id="f-ket" placeholder="Contoh: Gaji">')
+     +'<button class="btn" id="simpan" onclick="simpanMutasi(\'PEMASUKAN\')">Simpan pemasukan</button>';
+  }else{
+    f=tgl+fld('Dari',`<select id="f-dari">${kant('BULANAN')}</select>`)+fld('Ke',`<select id="f-ke">${kant('SIMPANAN')}</select>`)
+     +fld('Jumlah (Rp)','<input id="f-jml" inputmode="numeric" placeholder="500000">')
+     +fld('Keterangan (boleh kosong)','<input id="f-ket">')
+     +'<button class="btn" id="simpan" onclick="simpanMutasi(\'TRANSFER\')">Pindahkan saldo</button>';
+  }
+  $('#form-catat').innerHTML=f;
+  if(sub==='PENGELUARAN')saran();
+}
+function saran(){$('#saran').innerHTML=(D.cfg.tipe[$('#f-kat').value]||[]).map(x=>`<option value="${h(x)}">`).join('');}
+async function kirim(fn,p,ok){
+  const b=$('#simpan');b.disabled=true;
+  try{await call(fn,p);msg(ok);await load();}catch(e){}finally{b.disabled=false;}
+}
+function simpanPengeluaran(){
+  const x={};$$('[data-x]').forEach(e=>x[e.dataset.x]=e.value);
+  kirim('tambahPengeluaran',{tanggal:$('#f-tgl').value,kategori:$('#f-kat').value,keterangan:$('#f-ket').value,jumlah:num($('#f-jml').value),extra:x},'Pengeluaran tersimpan.');
+}
+function simpanMutasi(jenis){
+  kirim('tambahMutasi',{jenis:jenis,tanggal:$('#f-tgl').value,dari:jenis==='TRANSFER'?$('#f-dari').value:'',ke:$('#f-ke').value,jumlah:num($('#f-jml').value),keterangan:$('#f-ket').value},
+    jenis==='PEMASUKAN'?'Pemasukan tersimpan.':'Saldo dipindahkan.');
+}
+
+/* ---------- Riwayat ---------- */
+function renderRiwayat(){
+  const bln=$('#r-bulan').value,jn=$('#r-jenis').value,q=$('#r-q').value.toLowerCase();
+  const data=D.riwayat.filter(r=>(!bln||r.tgl.startsWith(bln))
+    &&(!jn||(jn==='PEMASUKAN'||jn==='TRANSFER'?r.jenis===jn:r.kategori===jn))
+    &&(!q||String(r.ket).toLowerCase().includes(q)));
+  $('#riwayat').innerHTML=data.length
+   ?`<div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th class="num">Jumlah</th><th></th></tr></thead><tbody>${data.map(r=>baris(r,true)).join('')}</tbody></table></div>`
+   :`<div class="empty"><p>${D.riwayat.length?'Tidak ada transaksi yang cocok dengan filter.':'Belum ada transaksi.'}</p><button class="btn" onclick="setTab('catat')">Catat transaksi</button></div>`;
+}
+async function hapusBaris(id){
+  const r=D.riwayat.find(x=>x.id===id);if(!r)return;
+  if(!confirm('Hapus "'+r.ket+'" sebesar '+rp(r.jumlah)+' pada '+fmtTgl(r.tgl)+'?'))return;
+  try{await call('hapus',id);msg('Transaksi dihapus.');await load();}catch(e){}
+}
+
+/* ---------- Setting ---------- */
+function renderSetting(){
+  const c=D.cfg;
+  $('#t-setting').innerHTML=`
+  <h2>Tipe pengeluaran</h2>
+  <p class="muted">Satu tipe per baris. Muncul sebagai saran saat mencatat.</p>
+  ${Object.keys(KAT).map(k=>fld(KAT[k],`<textarea id="tp-${k}">${h((c.tipe[k]||[]).join('\n'))}</textarea>`)).join('')}
+  <button class="btn" onclick="simpanTipe()">Simpan tipe</button>
+
+  <h2>Kolom tambahan</h2>
+  ${c.kolom.length?`<ul class="kol">${c.kolom.map((k,i)=>`<li><span>${h(k.nama)} <span class="muted">(${h(k.jenis)})</span></span><button class="lnk" onclick="hapusKolom(${i})">Hapus</button></li>`).join('')}</ul>`
+    :'<p class="muted">Belum ada kolom tambahan.</p>'}
+  ${fld('Nama kolom','<input id="k-nama" placeholder="Contoh: Metode bayar">')}
+  ${fld('Jenis','<select id="k-jenis" onchange="$(\'#k-opsi-w\').hidden=this.value!==\'pilihan\'"><option value="teks">Teks</option><option value="angka">Angka</option><option value="tanggal">Tanggal</option><option value="pilihan">Pilihan</option></select>')}
+  <div id="k-opsi-w" hidden>${fld('Pilihan (pisahkan dengan koma)','<input id="k-opsi" placeholder="Tunai, Transfer, E-wallet">')}</div>
+  <button class="btn sec" onclick="tambahKolom()">Tambah kolom</button>
+
+  <h2>Profil, nama saldo, dan batas</h2>
+  ${fld('Nama tampilan',`<input id="pengguna" value="${h(c.pengguna)}" maxlength="40">`)}
+  ${['BULANAN','INVESTASI','SIMPANAN'].map(k=>fld('Nama saldo '+k.toLowerCase(),`<input id="n-${k}" value="${h(c.nama[k])}">`)).join('')}
+  ${fld('Batas pengeluaran bulanan (Rp, 0 = tanpa batas)',`<input id="batas" inputmode="numeric" value="${c.batas||0}">`)}
+  <button class="btn" onclick="simpanPengaturan()">Simpan pengaturan</button>
+
+  <h2>Keamanan</h2>
+  <p class="muted">${D.pin?'PIN aktif. Aplikasi meminta PIN setelah sesi 30 menit berakhir.':'PIN belum diaktifkan. Akses sudah dibatasi ke akun Google pemilik.'}</p>
+  ${fld('PIN baru (4 sampai 8 angka)','<input type="password" id="pin-baru" inputmode="numeric" autocomplete="new-password">')}
+  <button class="btn sec" onclick="aturPin(true)">${D.pin?'Ganti PIN':'Aktifkan PIN'}</button>
+  ${D.pin?'<button class="btn sec" onclick="aturPin(false)">Matikan PIN</button>':''}`;
+}
+async function aksiSetting(fn,arg,ok){try{await call(fn,arg);msg(ok);await load();}catch(e){}}
+function simpanTipe(){
+  const t={};['HARIAN','POKOK','PASIF'].forEach(k=>t[k]=$('#tp-'+k).value.split('\n'));
+  aksiSetting('simpanTipe',t,'Tipe pengeluaran tersimpan.');
+}
+function tambahKolom(){
+  aksiSetting('tambahKolom',{nama:$('#k-nama').value,jenis:$('#k-jenis').value,opsi:$('#k-opsi')?$('#k-opsi').value:''},'Kolom ditambahkan.');
+}
+function hapusKolom(i){
+  const k=D.cfg.kolom[i];
+  if(!confirm('Hapus kolom "'+k.nama+'" dari form? Data lama tetap tersimpan di spreadsheet.'))return;
+  aksiSetting('hapusKolom',k.nama,'Kolom dihapus dari form.');
+}
+function simpanPengaturan(){
+  const nama={};['BULANAN','INVESTASI','SIMPANAN'].forEach(k=>nama[k]=$('#n-'+k).value);
+  aksiSetting('simpanPengaturan',{pengguna:$('#pengguna').value,nama:nama,batas:num($('#batas').value)},'Pengaturan tersimpan.');
+}
+function aturPin(aktif){
+  aksiSetting('aturPin',aktif?$('#pin-baru').value:'',aktif?'PIN disimpan.':'PIN dimatikan.');
+}
+</script>
+</body>
+</html>
